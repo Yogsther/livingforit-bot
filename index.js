@@ -19,13 +19,14 @@ var cashBank = [];
 bot.on('ready', () => {
     bot.user.setGame("Livingforit.xyz/bot");
     bot.user.setUsername("Livingforit Bot");
-    bot.user.setAvatar("profile.png");
+    //bot.user.setAvatar("profile.png");
   })
 
 
 
 bot.on("message", (message) => {
-
+   
+    
     if(message.author.bot) return;
 
     if(message.content.startsWith("!nick") == true){
@@ -91,7 +92,7 @@ bot.on("message", (message) => {
     if(message.content == "!help"){
         
         var personalGreeting = randomGreeting("greeting");
-        message.channel.send("**Hello!** " + message.author.username + " ^-^ I'm the Livingfor.it Bot. " + personalGreeting + " What do I do?\n I send both upvotes and downvotes on memes, so people can vote on memes.\n```Commands: \n!help - Gives you this message.\n!botstatus - Tells you the status of the bot. \n!nick [prefix] - Change prefix of the bots nick. \n\nOther features: \nMention notuco in a message, and the bot will strike in and link you to the website. \n\nComing features: \n!meme - sends you a random meme.```\n\nCheck out my website for more information: **http://www.Livingforit.xyz/bot**");
+        message.channel.send("**Hello!** " + message.author.username + " ^-^ I'm the Livingfor.it Bot. " + personalGreeting + " What do I do?\n I send both upvotes and downvotes on memes, so people can vote on memes.\n```Commands: \n!help - Gives you this message.\n!botstatus - Tells you the status of the bot. \n!nick [prefix] - Change prefix of the bots nick. \n!play - Shows avalible mini-games. \n\nRoulette commands:\n!roll [amount] [color]\n!leaderboard - See top 3 players\n!bank - See your bank status\n!wire [Player] [Amount] - Send money to a friend.\n\nOther features: \nMention notuco in a message, and the bot will strike in and link you to the website. \n```\n\nCheck out my website for more information: **http://www.Livingforit.xyz/bot**");
         
     }
     
@@ -132,26 +133,234 @@ function randomGreeting(){
     return greeting;
 }
 
-
+var poolActive;
+var poolPlayers = [];
+var poolMoney = [];
 
 bot.on("message", (message) => {
     // Roulette Game
+    
+
+
+    // Start pool
+    if(message.content.startsWith("!startpool") == true || message.content.startsWith("!pool") == true){
+
+        // Reset pool player, and money
+        poolPlayers = [];
+        poolMoney = [];
+        
+        // Part one pool
+        if(poolActive == true){
+            message.reply("A pool is already avtive. Try again shortly.");
+            return;
+        }
+
+        // Started pool.
+        poolActive = true;
+
+        message.channel.send("Pool was started by " + message.author.username + "!");
+        message.edit("Test");
+
+        }
+
+        // Part two of pool
+
+        if(message.content.startsWith("Pool was started") == true){
+            
+            // Set up main variables
+            var speed = 5000;
+            var redChip = "<:red_poker:364233887204769793>";
+            var greenChip = "<:green_poker:364233886680743937>"
+            var extraText;
+            var numPlayersEntered;
+            var pot;
+
+
+            // ANIMATE LAYER 01
+            message.edit("Room is starting.");
+            
+            setTimeout(() => { animate1();  }, speed);
+
+            function animate1(){
+
+                numPlayersEntered = poolPlayers.length;
+                pot = poolMoney.reduce(function(a, b) { return a + b; }, 0);
+
+                extraText = "**Pot: **" + pot + " <:gold_poker:364233886601052162> \n Players entered: " + numPlayersEntered;
+                
+
+                // ANIMATE LAYER 02
+                message.edit( redChip + redChip + redChip + redChip + redChip + extraText);
+                setTimeout(() => { animate2();  }, speed);
+            } 
+            
+            function animate2(){
+                numPlayersEntered = poolPlayers.length;
+                pot = poolMoney.reduce(function(a, b) { return a + b; }, 0);
+
+                extraText = "**Pot: **" + pot + " <:gold_poker:364233886601052162> \n Players entered: " + numPlayersEntered;
+            // ANIMATE LAYER 03
+            message.edit( greenChip + redChip + redChip + redChip + redChip + extraText);
+            setTimeout(() => { animate3();  }, speed);
+            }
+
+            function animate3(){
+                numPlayersEntered = poolPlayers.length;
+                pot = poolMoney.reduce(function(a, b) { return a + b; }, 0);
+
+                extraText = "**Pot: **" + pot + " <:gold_poker:364233886601052162> \n Players entered: " + numPlayersEntered;
+                // ANIMATE LAYER 04
+                message.edit( greenChip + greenChip + redChip + redChip + redChip + extraText);
+                setTimeout(() => { animate4();  }, speed);
+                }
+
+            function animate4(){
+                numPlayersEntered = poolPlayers.length;
+                pot = poolMoney.reduce(function(a, b) { return a + b; }, 0);
+
+                extraText = "**Pot: **" + pot + " <:gold_poker:364233886601052162> \n Players entered: " + numPlayersEntered;
+                // ANIMATE LAYER 05
+                message.edit( greenChip + greenChip + greenChip + redChip + redChip + extraText);
+                setTimeout(() => { animate5();  }, speed);
+                }
+            function animate5(){
+                numPlayersEntered = poolPlayers.length;
+                pot = poolMoney.reduce(function(a, b) { return a + b; }, 0);
+
+                extraText = "**Pot: **" + pot + " <:gold_poker:364233886601052162> \n Players entered: " + numPlayersEntered;
+                // ANIMATE LAYER 06
+                message.edit( greenChip + greenChip + greenChip + greenChip + redChip + extraText);
+                setTimeout(() => { animate6();  }, speed);
+                }
+            function animate6(){
+                numPlayersEntered = poolPlayers.length;
+                pot = poolMoney.reduce(function(a, b) { return a + b; }, 0);
+
+                extraText = "**Pot: **" + pot + " <:gold_poker:364233886601052162> \n Players entered: " + numPlayersEntered;
+                // ANIMATE LAYER 07 FINAL REVEAL
+                message.edit( greenChip + greenChip + greenChip + greenChip + greenChip + extraText);
+                }
+
+
+                // End of pool and winner will get choosen.
+        }
+
+
+    // Add money to pool
+    if(message.content.startsWith("!add") == true){
+        if(poolActive != true){
+            message.reply("There are no current pools open. Open one by typing !startpool");
+            //return;
+        }
+
+        var playerName = message.author.username;
+        var savedNamePos = nameBank.indexOf(playerName);
+        var playerBank = cashBank[savedNamePos];
+
+        var playerPoolMoney = message.content.lastIndexOf(" ");
+        var playerPoolMoney = message.content.substring(playerPoolMoney + 1);
+
+        var playerPoolNamePos = poolPlayers.indexOf(playerName);
+        
+        if(isFinite(playerPoolMoney) == false){
+            message.reply("Value must be a number.");
+            message.delete();
+            return;
+        }
+
+        if(playerPoolMoney > playerBank){
+            message.reply("You don't have enough funds to do this.");
+            message.delete();
+            return;
+        }
+        
+        if(playerPoolNamePos != -1){
+            // Player adding more.
+            var lastDeposit = poolMoney[playerPoolNamePos];
+            var newDeposit = Number(lastDeposit) + Number(playerPoolMoney);
+            poolMoney[playerPoolNamePos] = newDeposit;
+            playerBank = playerBank - playerPoolMoney;
+            cashBank[savedNamePos] = playerBank;
+
+            console.log(poolMoney);
+            console.log(poolPlayers);
+            message.delete();
+            return;
+
+        } 
+
+        if(savedNamePos == -1){
+            message.reply("You are not registered. Register by typing !roll");
+            message.delete();
+            return;
+        }
+    
+            // Clear to enter game.
+
+
+        poolPlayers.push(playerName);
+        poolMoney.push(playerPoolMoney);
+
+        playerBank = playerBank - playerPoolMoney;
+        cashBank[savedNamePos] = playerBank;
+
+        console.log(poolMoney);
+        console.log(poolPlayers);
+
+        message.delete();
+
+    }
+
+
+
 
 
     if(message.content.startsWith("!wire") == true){
-        
+        console.log("----------");
         var firstSpaceWire = message.content.indexOf(" ");
         var lastSpaceWire = message.content.lastIndexOf(" ");
 
+        var playerName = message.author.username;
         var wirePlayer = message.content.substring(firstSpaceWire + 1, lastSpaceWire);
-        var wireAmount = message.content.substring(lastSpaceWire) -1;
+        var wireAmount = message.content.substring(lastSpaceWire +1);
         
-        
+        // Bank of user sending the money
+        var savedNamePos = nameBank.indexOf(playerName);
+        var playerBank = cashBank[savedNamePos];
+
+        if(savedNamePos == -1){
+            message.channel.send("Sorry, you are not registered as a player. '!bet' or '!play roulette' to register.");
+            return;
+        }
+
+        // Bank of user reciving the money
+        var savedNamePosWire = nameBank.indexOf(wirePlayer);
+        var wirePlayerBank = cashBank[savedNamePosWire];
+
+        if(savedNamePosWire == -1){
+            message.channel.send("Sorry, " + wirePlayer + " is not a registered as a player. '!bet' or '!play roulette' to register.");
+            return;
+        }
+
+        if(playerBank < wireAmount){
+            message.reply("You don't have enough funds to do this.");
+            return;
+        }
+
+        playerBank = playerBank - wireAmount;
+        wirePlayerBank = Number(wirePlayerBank) + Number(wireAmount);
+
+
+        cashBank[savedNamePos] = playerBank;
+        cashBank[savedNamePosWire] = wirePlayerBank;
+
+        message.channel.send(playerName + " sent " + wireAmount + " <:gold_poker:364233886601052162> => " + wirePlayer + "!");
 
         console.log();
         console.log("Wire Player: " + wirePlayer);
         console.log("Wire Amount: " + wireAmount);
 
+        
     }
 
 
@@ -416,4 +625,8 @@ bot.on("message", (message) => {
 
 
 bot.login("token");
-console.log("Bot is turned on ( ͡° ͜ʖ ͡°)");
+console.log("");
+console.log("Livingforit-Bot is turned on.");
+console.log("");
+console.log("");
+
