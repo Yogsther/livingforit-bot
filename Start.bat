@@ -1,3 +1,3 @@
-cd C:\te16_git\livingforit-bot
+C:\Users\kaol16\Desktop\livingforit-bot
 node .
 pause

@@ -78,7 +78,7 @@ bot.on("message", (message) => {
 
  
   
-    if(message.author.id == 160121235471073291 || message.content.match("pop")){
+    if(message.content.match("pop")){
         message.react("popkrull:329354881238564866");
     }
 
@@ -135,7 +135,26 @@ function randomGreeting(){
 
 
 bot.on("message", (message) => {
-// Play game
+    // Roulette Game
+
+
+    if(message.content.startsWith("!wire") == true){
+        
+        var firstSpaceWire = message.content.indexOf(" ");
+        var lastSpaceWire = message.content.lastIndexOf(" ");
+
+        var wirePlayer = message.content.substring(firstSpaceWire + 1, lastSpaceWire);
+        var wireAmount = message.content.substring(lastSpaceWire) -1;
+        
+        
+
+        console.log();
+        console.log("Wire Player: " + wirePlayer);
+        console.log("Wire Amount: " + wireAmount);
+
+    }
+
+
     if(message.content.startsWith("!play") == true){
           
         
@@ -156,7 +175,7 @@ bot.on("message", (message) => {
                 var playerBank = cashBank[savedNamePos];
 
                 message.channel.send(playerName + " has registered to play Roulette! <:red_poker:364233887204769793> <:green_poker:364233886680743937> <:black_poker:364233886726619147>\n\nBank: <:gold_poker:364233886601052162>**" + playerBank + "** \n" +
-                "```Type !bet [amount] [ Red (x2) | Black (x2) | Green x (14) ] \nex. Bet 150 on red: !roulette 150 red" + "```\n");
+                "```Type !roll [amount] [ Red (x2) | Black (x2) | Green x (14) ] \nex. roll 150 on red: !roulette 150 red" + "```\n");
 
 
 
@@ -170,72 +189,102 @@ bot.on("message", (message) => {
                 var playerBank = cashBank[savedNamePos];
 
                 message.channel.send(playerName + " status. <:red_poker:364233887204769793> <:green_poker:364233886680743937> <:black_poker:364233886726619147>\n\nBank: <:gold_poker:364233886601052162>**" + playerBank + "** \n" +
-                "```Type !bet [amount] [ Red (x2) | Black (x2) | Green x (14) ] \nex. Bet 150 on red: !roulette 150 red" + "```\n");
+                "```Type !roll [amount] [ Red (x2) | Black (x2) | Green x (14) ] \nex. roll 150 on red: !roulette 150 red" + "```\n");
                 
             }
             return;
         }
             
-        message.channel.send("There is currently only one game:\n**Roulette:**\n\n```Commands:\n!play roulette - Register to play, then you can bet-on!\n!bet [amount] [ Red (x2) | Black (x2) | Green x (14)] - bet with your credits!\n!bank - See your bank, and how much money you have left...\n!leaderboard - See the leaderboard for the roulette mini-game.\n ```");
+        message.channel.send("There is currently only one game:\n**Roulette:**\n\n```Commands:\n!play roulette - Register to play, then you can roll-on!\n!roll [amount] [ Red (x2) | Black (x2) | Green x (14)] - roll with your credits!\n!bank - See your bank, and how much money you have left...\n!leaderboard - See the leaderboard for the roulette mini-game.\n ```");
         console.log(message.author.username + " used !play");
     }
 
-    if(message.content.startsWith("!bet") == true){ 
+    if(message.content.startsWith("!roll") == true || message.content.startsWith("roll") == true){ 
 
         var playerName = message.author.username;  
+
+
+
+
         if(nameBank.indexOf(playerName) == -1){
 
-            message.channel.send("You are not registered in this session. Please register by typing !play roulette");
-            return;
-        }
+        var playerName = message.author.username;
 
+            
+        if(nameBank.indexOf(playerName) == -1){
+                // New play, set up profile.
+                nameBank.push(playerName);
+                cashBank.push(1000);
+
+                var savedNamePos = nameBank.indexOf(playerName);
+                var playerBank = cashBank[savedNamePos];
+
+                message.channel.send(playerName + " has registered to play Roulette! <:red_poker:364233887204769793> <:green_poker:364233886680743937> <:black_poker:364233886726619147>\n\nBank: <:gold_poker:364233886601052162>**" + playerBank + "** \n" +
+                "```Type !roll [amount] [ Red (x2) | Black (x2) | Green x (14) ] \nex. roll 150 on red: !roulette 150 red" + "```\n");
+            }
+        }
+        
+        var savedNamePos = nameBank.indexOf(playerName);
+        var playerBank = cashBank[savedNamePos];
+        
+        
 
         var firstSpace = message.content.indexOf(" ");
         var lastSpace = message.content.lastIndexOf(" ");
 
         var gambleAmount = message.content.substring(firstSpace, lastSpace);
+
+        if(gambleAmount == " all"){
+            gambleAmount = playerBank;
+        } else {
             gambleAmount = Math.floor(gambleAmount);
+        }
+            
         var bet = message.content.substring(lastSpace + 1).toLowerCase();
         var betColor;
         var winMultiplier = 2;
         
-        var savedNamePos = nameBank.indexOf(playerName);
-        var playerBank = cashBank[savedNamePos];
+        
 
         var moneyWon;
 
+
+        
         
         if(bet == "black" || bet == "red" || bet == "green"){
             // Correct bet was entered.
         } else {
         
             
-            message.channel.send("You entered the wrong value for bet. => [ Red (x2) | Black (x2) | Green x (14)]");
+            message.reply("You entered the wrong value for roll. => [ Red (x2) | Black (x2) | Green x (14)]");
             return;
         }
+        
+        
         
 
         if(gambleAmount > playerBank){
             
-            message.channel.send("You tried to bet "+ gambleAmount + ". But you only have " + playerBank + ".");
+            message.reply("You tried to roll "+ gambleAmount + ". But you only have " + playerBank + ".");
             return;
         }
 
+
         if(gambleAmount < 1){
             
-            message.channel.send("Minimum betting amount is 1 Credit.");
+            message.reply("Minimum betting amount is 1 Credit.");
             return;
         }
 
         if(isFinite(gambleAmount) == false){
          
-            message.channel.send("The betting amount must be a number.");
+           message.reply("The betting amount must be a number.");
             return;
         }
 
       
 
-        message.channel.send("Bet placed for" + gambleAmount + " on " + bet + ".");
+        
 
         playerBank = playerBank - gambleAmount;
        
@@ -265,26 +314,38 @@ bot.on("message", (message) => {
             chipEmoji = "<:black_poker:364233886726619147>";
         }
 
-
+        var playerAt = "<@" + message.author.id + ">";
         if (bet == betColor){
             // Player won
             
             playerBank = playerBank + gambleAmount * winMultiplier;
             moneyWon = gambleAmount * winMultiplier - gambleAmount;
            
-            console.log("ROULETTE: " + playerName + " won " + moneyWon + ". Betted" + gambleAmount);
-            message.channel.send("***" + playerName + " won " + moneyWon + "! *** The roulete rolled " + roll + " " + chipEmoji + "\nBank: " + playerBank + "<:gold_poker:364233886601052162>");
+            
+
+            console.log("ROULETTE: " + playerName + " won " + moneyWon + ". Betted " + gambleAmount);
+            message.channel.send(" " + chipEmoji + chipEmoji + chipEmoji + "***" + playerAt + " won " + moneyWon + "! *** (Placed: "+ gambleAmount +", on: " + bet.toUpperCase() + ") The roulette rolled " + roll + " " + "\nBank: " + playerBank + "<:gold_poker:364233886601052162>");
 
         } else if (bet != betColor) {
             // You lost
             console.log("ROULETTE: " + playerName + " lost " + gambleAmount);
-            message.channel.send(playerName + " lost" + gambleAmount + " The roulete rolled " + roll + " " + chipEmoji + "\nBank: " + playerBank + "<:gold_poker:364233886601052162>");
+            message.channel.send(" " + chipEmoji + playerAt + " lost " + gambleAmount + " (Placed: "+ gambleAmount +", on: " + bet.toUpperCase() + ")  The roulette rolled " + roll + "\nBank: " + playerBank + "<:gold_poker:364233886601052162>");
         }
         
        
+        if(playerBank == 0){
+            var rockBottom = true;
+        }
         cashBank[savedNamePos] = playerBank;
-       
+        
+        if(rockBottom == true){
+            message.reply("You reached 0. You have no more money left. Wait until the bot is restarted, or we invent a new feature to gain credits back. :( . \nBank: " + playerBank + "<:gold_poker:364233886601052162>");
+        }
+        
+        
+        message.delete();
 
+        
     }
 
     if(message.content.startsWith("!bank") == true){
@@ -301,7 +362,7 @@ bot.on("message", (message) => {
     }
 
 
-    if(message.content.startsWith("!leaderboard") == true){
+    if(message.content.startsWith("!leaderboard") == true || message.content.startsWith("!lead") == true){
 
         var tempCashBank = cashBank.slice();
 
@@ -340,10 +401,6 @@ bot.on("message", (message) => {
         "\n<:bronze_poker:364271767901962241> 3." + thirdPlace + " - " + thirdPlaceMoney + "\n```Play: !play roulette```");
 
 
-        console.log(firstPlace);
-        console.log(secondPlace);
-        console.log(thirdPlace);
-
 
 
         function findTopFive(){
@@ -359,4 +416,4 @@ bot.on("message", (message) => {
 
 
 bot.login("token");
-console.log("Bot is on.");
+console.log("Bot is turned on ( ͡° ͜ʖ ͡°)");
