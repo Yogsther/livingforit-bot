@@ -328,6 +328,22 @@ bot.on("message", (message) => {
         var savedNamePos = nameBank.indexOf(playerName);
         var playerBank = cashBank[savedNamePos];
 
+
+       
+
+        if(wireAmount < 1){
+            
+            message.reply("Minimum betting amount is 1 Credit.");
+            return;
+        }
+
+        if(isFinite(wireAmount) == false){
+         
+           message.reply("The betting amount must be a number.");
+            return;
+        }
+
+
         if(savedNamePos == -1){
             message.channel.send("Sorry, you are not registered as a player. '!bet' or '!play roulette' to register.");
             return;
