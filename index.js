@@ -1,4 +1,4 @@
-const Discord = require("discord.js");
+﻿const Discord = require("discord.js");
 const bot = new Discord.Client();
 
 // bot_textID dank_memes channel
@@ -14,32 +14,21 @@ var te16Channels = ["dank_memes", "politik", "original_memes"];
 var nameBank = [];
 var cashBank = [];
 
+var resetTimer;
 
 
 bot.on('ready', () => {
-    bot.user.setGame("Livingforit.xyz/bot");
     bot.user.setUsername("Livingforit Bot");
-    //bot.user.setAvatar("profile.png");
+    bot.user.setGame("Livingforit.xyz/bot");
   })
 
 
 
 bot.on("message", (message) => {
-   
-    
+
+
     if(message.author.bot) return;
 
-    if(message.content.startsWith("!nick") == true){
-
-        // Change prefix of bot
-        var lastSpace = message.content.lastIndexOf(" ");
-        var newNick = message.content.substring(lastSpace + 1);
-        // Change bot nick
-        message.guild.members.get(bot.user.id).setNickname("[" + newNick + "] L.it bot");
-        // Log changes
-        console.log(message.author.username + " changed the nickname of the bot to " + newNick + ".");
-
-    }    
 
     if(message.attachments.size > 0 && message.channel.name == bot_textID){
         // Sent message is an image.
@@ -85,15 +74,36 @@ bot.on("message", (message) => {
 
 
     if(message.content == "!botstatus"){
-        message.reply("**I'm working as intended.** *v.0.1* 👌👌👌");
+        message.reply("**I'm working as intended.** *v.0.4* 👌👌👌");
         
     }
 
     if(message.content == "!help"){
         
         var personalGreeting = randomGreeting("greeting");
-        message.channel.send("**Hello!** " + message.author.username + " ^-^ I'm the Livingfor.it Bot. " + personalGreeting + " What do I do?\n I send both upvotes and downvotes on memes, so people can vote on memes.\n```Commands: \n!help - Gives you this message.\n!botstatus - Tells you the status of the bot. \n!nick [prefix] - Change prefix of the bots nick. \n!play - Shows avalible mini-games. \n\nRoulette commands:\n!roll [amount] [color]\n!leaderboard - See top 3 players\n!bank - See your bank status\n!wire [Player] [Amount] - Send money to a friend.\n\nOther features: \nMention notuco in a message, and the bot will strike in and link you to the website. \n```\n\nCheck out my website for more information: **http://www.Livingforit.xyz/bot**");
         
+                message.channel.send({embed: {
+                    color: 0xf5db1f,
+                    author: {
+                      name: "Help - " + personalGreeting,
+                      icon_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Info_icon-72a7cf.svg/2000px-Info_icon-72a7cf.svg.png",
+                    },
+                    title: "Roulette commands",
+                    description: "```!roll [amount] [black (x2) | red (x2) | green (x14)]\n!bank - Gives you your bank status!\n!leaderboard - See top 3 wealthiest people on the server.\n!startpot - Start a new jackpot.\n!add [amount] - Bet in on a jackpot.\n!wire [username] [amount] - Send money to another person.\n!moneymaker - Add money to your account by clicking an emote```",                                                                   
+        
+                    fields: [
+                      {
+                        name: "More",
+                        value: "[Check out my website!](http://www.Livingforit.xyz/bot)\n[Add me to your server!](https://discordapp.com/oauth2/authorize?client_id=363749001788522496&scope=bot&permissions=1341643969)"
+                      },
+                      {
+                        name: "Other commands",
+                        value: "```!help - Gives you this menu.\n!botstatus - Gives you the status of the bot. ```"
+                      }
+                    ],
+                    
+                  }
+                });
     }
     
     if(message.content.match("<@363749001788522496>") || message.content.match("bot")){
@@ -106,8 +116,11 @@ bot.on("message", (message) => {
         message.reply(randomResponse("response"));
     }
 
+    if(message.content == "test"){
 
-
+        
+          
+    }
 
 })
 
@@ -137,108 +150,459 @@ var poolActive;
 var poolPlayers = [];
 var poolMoney = [];
 
+var poolPlayersChance = [];
+var poolWinner = [];
+var poolWinnerProcentage;
+
+var poolStarter;
+var pot;
+
+
+// Bot on reactions, for money maker & more
+
+
+bot.on('messageReactionAdd', (reaction, user) => {
+         
+        if(reaction.emoji.id == "365558365499293696" && user.bot == false){
+            moneyMakerAuthor = reaction.message.content;
+            moneyMakerAuthor = moneyMakerAuthor.substring(4, moneyMakerAuthor.length - 1);
+            // Get account
+            var savedNamePos = nameBank.indexOf(moneyMakerAuthor);
+            var playerBank = cashBank[savedNamePos];
+            // Add money to account
+            cashBank[savedNamePos] = playerBank + 1;
+        }
+    });
+
+
+bot.on('messageReactionRemove', (reaction, user) => {
+        
+       if(reaction.emoji.id == "365558365499293696" && user.bot == false){
+           moneyMakerAuthor = reaction.message.content;
+           moneyMakerAuthor = moneyMakerAuthor.substring(4, moneyMakerAuthor.length - 1);
+           // Get account
+           var savedNamePos = nameBank.indexOf(moneyMakerAuthor);
+           var playerBank = cashBank[savedNamePos];
+           // Add money to account
+           cashBank[savedNamePos] = playerBank + 1;
+       }
+   });
+
+
+
+
+
 bot.on("message", (message) => {
     // Roulette Game
     
+    // React with emoji for Money Maker command.
+    if(message.author.bot == true && message.content.match("MM-")){
+        message.react(":add_money:365558365499293696");
+    }
+    
 
+    if(message.author.bot == true){
+        return;
+    }
+
+    // Money Maker 3000^tm
+    if(message.content == "!money" || message.content == "!moneymaker"){
+
+        var moneyMakerAuthor = message.author.username;
+        var savedNamePos = nameBank.indexOf(moneyMakerAuthor);
+        var playerBank = cashBank[savedNamePos];
+
+        if(savedNamePos == -1){
+            message.reply("You are not registered and already have 1000 Credits to claim by typing !bank or !roll");
+            return;
+        }
+
+        // Send the moneymaker
+        message.channel.send("*MM-" + message.author.username + "*",{embed: {
+            color: 0xe9ce10,
+            author: {
+              name: "Money Maker 3000™",
+              icon_url: "https://i.imgur.com/zKFte2R.png",
+            },
+            title: "Click the Emote to add credits to " + message.author.username  + "'s account."
+          }
+        });
+        message.delete();
+    }
 
     // Start pool
-    if(message.content.startsWith("!startpool") == true || message.content.startsWith("!pool") == true){
+    if(message.content.startsWith("!startpot") == true || message.content.startsWith("!pot") == true){
 
         // Reset pool player, and money
         poolPlayers = [];
         poolMoney = [];
+        pot = 0;
         
         // Part one pool
         if(poolActive == true){
             message.reply("A pool is already avtive. Try again shortly.");
+            message.delete();
             return;
         }
 
         // Started pool.
         poolActive = true;
 
-        message.channel.send("Pool was started by " + message.author.username + "!");
-        message.edit("Test");
+        poolStarter = message.author.username;
+
+        
+
+        // First pool send
+        message.channel.send(".1", {embed: {
+            color: 0xea484d,
+            author: {
+              name: "Jackpot",
+              icon_url: "https://i.imgur.com/RZzp10h.png"
+            },
+            title: "Jackpot started by " + "test",
+          
+            description: "type: ```!add [amount] to bet.```",
+
+            
+            fields: [{
+                name: "Pot",
+                value: "test" + " <:gold_poker:364233886601052162>"
+              },
+              {
+                name: "Players entered",
+                value: "test"
+              },
+              {
+                name: "Ending",
+                value: "test"
+              }
+            ],
+            
+          }
+        });
+        console.log("Pool was started by " + message.author.username + "!");
+        message.delete();
 
         }
 
         // Part two of pool
 
-        if(message.content.startsWith("Pool was started") == true){
+        if(message.content.startsWith(".1") == true && message.author.bot == true){
             
             // Set up main variables
-            var speed = 5000;
+            var speed = 3000;
             var redChip = "<:red_poker:364233887204769793>";
             var greenChip = "<:green_poker:364233886680743937>"
+            var blackChip = "<:black_poker:364233886726619147>";
             var extraText;
             var numPlayersEntered;
-            var pot;
+            
+           
+            numPlayersEntered = poolPlayers.length;
 
 
-            // ANIMATE LAYER 01
-            message.edit("Room is starting.");
+            // Animate 0
+            message.edit("",{embed: {
+                color: 0xea484d,
+                author: {
+                  name: "Jackpot",
+                  icon_url: "https://i.imgur.com/RZzp10h.png"
+                },
+                title: "Jackpot started by " + poolStarter,
+              
+                description: "type: ```!add [amount] to bet.```",
+    
+                
+                fields: [{
+                    name: "Pot",
+                    value: pot + " <:gold_poker:364233886601052162>"
+                  },
+                  {
+                    name: "Players entered",
+                    value: numPlayersEntered
+                  },
+                  {
+                    name: "Ending",
+                    value: redChip + redChip + redChip + redChip + redChip
+                  }
+                ],
+                
+              }
+            });
+           
             
             setTimeout(() => { animate1();  }, speed);
 
             function animate1(){
 
-                numPlayersEntered = poolPlayers.length;
-                pot = poolMoney.reduce(function(a, b) { return a + b; }, 0);
+                // Animate 1
 
-                extraText = "**Pot: **" + pot + " <:gold_poker:364233886601052162> \n Players entered: " + numPlayersEntered;
+                numPlayersEntered = poolPlayers.length;
+
                 
 
-                // ANIMATE LAYER 02
-                message.edit( redChip + redChip + redChip + redChip + redChip + extraText);
+                // ANIMATE LAYER 01
+                message.edit("",{embed: {
+                    color: 0xea484d,
+                    author: {
+                      name: "Jackpot",
+                      icon_url: "https://i.imgur.com/RZzp10h.png"
+                    },
+                    title: "Jackpot started by " + poolStarter,
+                  
+                    description: "type: ```!add [amount] to bet.```",
+        
+                    
+                    fields: [{
+                        name: "Pot",
+                        value: pot + " <:gold_poker:364233886601052162>"
+                      },
+                      {
+                        name: "Players entered",
+                        value: numPlayersEntered
+                      },
+                      {
+                        name: "Ending",
+                        value: greenChip + redChip + redChip + redChip + redChip
+                      }
+                    ],
+                    
+                  }
+                });
+
+
+                if(resetTimer == true){
+                    
+                    resetTimer = false;
+                    animate1();
+                    return;
+                }
                 setTimeout(() => { animate2();  }, speed);
             } 
             
             function animate2(){
                 numPlayersEntered = poolPlayers.length;
-                pot = poolMoney.reduce(function(a, b) { return a + b; }, 0);
+               
 
-                extraText = "**Pot: **" + pot + " <:gold_poker:364233886601052162> \n Players entered: " + numPlayersEntered;
+                
             // ANIMATE LAYER 03
-            message.edit( greenChip + redChip + redChip + redChip + redChip + extraText);
+            message.edit("",{embed: {
+                color: 0xea484d,
+                author: {
+                  name: "Jackpot",
+                  icon_url: "https://i.imgur.com/RZzp10h.png"
+                },
+                title: "Jackpot started by " + poolStarter,
+              
+                description: "type: ```!add [amount] to bet.```",
+    
+                
+                fields: [{
+                    name: "Pot",
+                    value: pot + " <:gold_poker:364233886601052162>"
+                  },
+                  {
+                    name: "Players entered",
+                    value: numPlayersEntered
+                  },
+                  {
+                    name: "Ending",
+                    value: greenChip + greenChip + redChip + redChip + redChip
+                  }
+                ],
+                
+              }
+            });
+
+             if(resetTimer == true){
+                    resetTimer = false;
+                    animate1();
+                    return;
+                }
             setTimeout(() => { animate3();  }, speed);
             }
 
             function animate3(){
                 numPlayersEntered = poolPlayers.length;
-                pot = poolMoney.reduce(function(a, b) { return a + b; }, 0);
-
-                extraText = "**Pot: **" + pot + " <:gold_poker:364233886601052162> \n Players entered: " + numPlayersEntered;
+                
+                
                 // ANIMATE LAYER 04
-                message.edit( greenChip + greenChip + redChip + redChip + redChip + extraText);
+                message.edit("",{embed: {
+                    color: 0xea484d,
+                    author: {
+                      name: "Jackpot",
+                      icon_url: "https://i.imgur.com/RZzp10h.png"
+                    },
+                    title: "Jackpot started by " + poolStarter,
+                  
+                    description: "type: ```!add [amount] to bet.```",
+        
+                    
+                    fields: [{
+                        name: "Pot",
+                        value: pot + " <:gold_poker:364233886601052162>"
+                      },
+                      {
+                        name: "Players entered",
+                        value: numPlayersEntered
+                      },
+                      {
+                        name: "Ending",
+                        value: greenChip + greenChip + greenChip + redChip + redChip
+                      }
+                    ],
+                    
+                  }
+                });
+
+                 if(resetTimer == true){
+                    resetTimer = false;
+                    animate1();
+                    return;
+                }
                 setTimeout(() => { animate4();  }, speed);
                 }
 
             function animate4(){
                 numPlayersEntered = poolPlayers.length;
-                pot = poolMoney.reduce(function(a, b) { return a + b; }, 0);
-
-                extraText = "**Pot: **" + pot + " <:gold_poker:364233886601052162> \n Players entered: " + numPlayersEntered;
+              
+                
                 // ANIMATE LAYER 05
-                message.edit( greenChip + greenChip + greenChip + redChip + redChip + extraText);
+                message.edit("",{embed: {
+                    color: 0xea484d,
+                    author: {
+                      name: "Jackpot",
+                      icon_url: "https://i.imgur.com/RZzp10h.png"
+                    },
+                    title: "Jackpot started by " + poolStarter,
+                  
+                    description: "type: ```!add [amount] to bet.```",
+        
+                    
+                    fields: [{
+                        name: "Pot",
+                        value: pot + " <:gold_poker:364233886601052162>"
+                      },
+                      {
+                        name: "Players entered",
+                        value: numPlayersEntered
+                      },
+                      {
+                        name: "Ending",
+                        value: greenChip + greenChip + greenChip + greenChip + redChip
+                      }
+                    ],
+                    
+                  }
+                });
+
+                 if(resetTimer == true){
+                    resetTimer = false;
+                    animate1();
+                    return;
+                }
                 setTimeout(() => { animate5();  }, speed);
                 }
             function animate5(){
                 numPlayersEntered = poolPlayers.length;
-                pot = poolMoney.reduce(function(a, b) { return a + b; }, 0);
+              
 
-                extraText = "**Pot: **" + pot + " <:gold_poker:364233886601052162> \n Players entered: " + numPlayersEntered;
+                
                 // ANIMATE LAYER 06
-                message.edit( greenChip + greenChip + greenChip + greenChip + redChip + extraText);
+                message.edit("",{embed: {
+                    color: 0xea484d,
+                    author: {
+                      name: "Jackpot",
+                      icon_url: "https://i.imgur.com/RZzp10h.png"
+                    },
+                    title: "Jackpot started by " + poolStarter,
+                  
+                    description: "type: ```!add [amount] to bet.```",
+                    
+                    fields: [{
+                        name: "Pot",
+                        value: pot + " <:gold_poker:364233886601052162>"
+                      },
+                      {
+                        name: "Players entered",
+                        value: numPlayersEntered
+                      },
+                      {
+                        name: "Ending",
+                        value: greenChip + greenChip + greenChip + greenChip + greenChip
+                      }
+                    ],
+                    
+                  }
+                });
+
+                 if(resetTimer == true){
+                   resetTimer = false;
+                    animate1();
+                    return;
+                }
                 setTimeout(() => { animate6();  }, speed);
                 }
             function animate6(){
+                
                 numPlayersEntered = poolPlayers.length;
-                pot = poolMoney.reduce(function(a, b) { return a + b; }, 0);
+              
+                // Pick winner
 
-                extraText = "**Pot: **" + pot + " <:gold_poker:364233886601052162> \n Players entered: " + numPlayersEntered;
+                poolWinner = poolPlayers[Math.floor(Math.random()*poolPlayers.length)];
+
+                // Give winner the pot
+
+                var poolMoneyPos = nameBank.indexOf(poolWinner);
+                var poolWinnerBank = cashBank[poolMoneyPos];
+                
+                poolWinnerBank = poolWinnerBank + pot;
+
+                cashBank[poolMoneyPos] = poolWinnerBank;
+
+                // Get percentage
+
+                var winnersBetPos = poolPlayers.indexOf(poolWinner);
+                var winnerBet = poolMoney[winnersBetPos];
+
+                var winnerPercentage = winnerBet / pot;
+                winnerPercentage = winnerPercentage * 100;
+                winnerPercentage = Math.round(winnerPercentage);
+                
+
+            
+
                 // ANIMATE LAYER 07 FINAL REVEAL
-                message.edit( greenChip + greenChip + greenChip + greenChip + greenChip + extraText);
+                message.edit("",{embed: {
+                    color: 0x1c1c1c,
+                    author: {
+                      name: "Jackpot [OVER]",
+                      icon_url: "https://i.imgur.com/SQLMIW4.png"
+                    },
+                    title: "Jackpot was by " + poolStarter,
+                  
+                    description: "To start a new jackpot, type: ```!startpot```",
+                    
+                    fields: [{
+                        name: "Pot",
+                        value: pot + " <:gold_poker:364233886601052162>"
+                      },
+                      {
+                        name: "Players entered",
+                        value: numPlayersEntered
+                      },
+                      {
+                        name: "Winner",
+                        value: "**" + poolWinner + " won the pot of ** " + pot + "<:gold_poker:364233886601052162> with a " + winnerPercentage + "% chance!"
+                      }
+                    ],
+                    
+                  }
+                });
+                
+
+
+                poolActive = false;
                 }
 
 
@@ -248,9 +612,10 @@ bot.on("message", (message) => {
 
     // Add money to pool
     if(message.content.startsWith("!add") == true){
+        
         if(poolActive != true){
-            message.reply("There are no current pools open. Open one by typing !startpool");
-            //return;
+            message.reply("There are no current pots open. Open one by typing !pot");
+            return;
         }
 
         var playerName = message.author.username;
@@ -273,39 +638,83 @@ bot.on("message", (message) => {
             message.delete();
             return;
         }
+
+        if(playerPoolMoney < 10){
+            message.reply("Minimum bet is 10<:gold_poker:364233886601052162>");
+            message.delete();
+            return;
+        }
         
         if(playerPoolNamePos != -1){
             // Player adding more.
             var lastDeposit = poolMoney[playerPoolNamePos];
             var newDeposit = Number(lastDeposit) + Number(playerPoolMoney);
+            
             poolMoney[playerPoolNamePos] = newDeposit;
-            playerBank = playerBank - playerPoolMoney;
+            playerBank = playerBank - Number(playerPoolMoney);
             cashBank[savedNamePos] = playerBank;
 
-            console.log(poolMoney);
-            console.log(poolPlayers);
+            message.channel.send(playerName + " added " + playerPoolMoney + "<:gold_poker:364233886601052162> more. Total: " + newDeposit + "<:gold_poker:364233886601052162>");
+            console.log(playerName + " added " + newDeposit + " more.");
+            
+            pot = Number(pot) + Number(playerPoolMoney);
+
+            // Set nameChanseArray
+            var times = playerPoolMoney / 10;
+            console.log("Times: " + times);
+            for(var i=0; i < times; i++){
+              poolPlayersChance.push(playerName);
+            }
+            
+
+
             message.delete();
+            resetTimer = true;
             return;
 
         } 
 
         if(savedNamePos == -1){
-            message.reply("You are not registered. Register by typing !roll");
+            // Register player if he/she is not already.
+            nameBank.push(playerName);
+            cashBank.push(1000);
+
+            var savedNamePos = nameBank.indexOf(playerName);
+            var playerBank = cashBank[savedNamePos];
+
+            
+            message.channel.send(playerName + " was registered for Roulette.");
             message.delete();
-            return;
+            
         }
     
-            // Clear to enter game.
-
-
+        // Clear to enter game.
+        
+        
         poolPlayers.push(playerName);
-        poolMoney.push(playerPoolMoney);
+        poolMoney.push(Number(playerPoolMoney));
 
         playerBank = playerBank - playerPoolMoney;
         cashBank[savedNamePos] = playerBank;
 
-        console.log(poolMoney);
-        console.log(poolPlayers);
+        // Set pot
+        pot = Number(pot) + Number(playerPoolMoney);
+
+        // Set nameChanseArray
+        var times = playerPoolMoney / 10;
+        console.log("Times: " + times);
+        for(var i=0; i < times; i++){
+            poolPlayersChance.push(playerName);
+        }
+        
+
+
+
+        message.channel.send(playerName + " joined in with " + playerPoolMoney + "<:gold_poker:364233886601052162>!");
+        console.log(playerName + " joined in with " + playerPoolMoney);
+        
+
+        resetTimer = true;
 
         message.delete();
 
@@ -316,7 +725,7 @@ bot.on("message", (message) => {
 
 
     if(message.content.startsWith("!wire") == true){
-        console.log("----------");
+     
         var firstSpaceWire = message.content.indexOf(" ");
         var lastSpaceWire = message.content.lastIndexOf(" ");
 
@@ -333,19 +742,19 @@ bot.on("message", (message) => {
 
         if(wireAmount < 1){
             
-            message.reply("Minimum betting amount is 1 Credit.");
+            message.reply("Minimum wire amount is 1 Credit.");
             return;
         }
 
         if(isFinite(wireAmount) == false){
          
-           message.reply("The betting amount must be a number.");
+           message.reply("The wire amount must be a number.");
             return;
         }
 
 
         if(savedNamePos == -1){
-            message.channel.send("Sorry, you are not registered as a player. '!bet' or '!play roulette' to register.");
+            message.channel.send("Sorry, you are not registered as a player. '!roll' or '!play roulette' to register.");
             return;
         }
 
@@ -354,7 +763,7 @@ bot.on("message", (message) => {
         var wirePlayerBank = cashBank[savedNamePosWire];
 
         if(savedNamePosWire == -1){
-            message.channel.send("Sorry, " + wirePlayer + " is not a registered as a player. '!bet' or '!play roulette' to register.");
+            message.channel.send("Sorry, " + wirePlayer + " is not a registered as a player. '!roll' or '!play roulette' to register.");
             return;
         }
 
@@ -363,19 +772,26 @@ bot.on("message", (message) => {
             return;
         }
 
+        // Everything is clear, and money is being sent.
+
         playerBank = playerBank - wireAmount;
+        wireAmount = Number(wireAmount);
+        wireAmount = Math.round(wireAmount);
+
         wirePlayerBank = Number(wirePlayerBank) + Number(wireAmount);
+
 
 
         cashBank[savedNamePos] = playerBank;
         cashBank[savedNamePosWire] = wirePlayerBank;
 
+
+ 
+
         message.channel.send(playerName + " sent " + wireAmount + " <:gold_poker:364233886601052162> => " + wirePlayer + "!");
+        console.log(playerName + " sent " + wireAmount + " <:gold_poker:364233886601052162> => " + wirePlayer + "!");
 
-        console.log();
-        console.log("Wire Player: " + wirePlayer);
-        console.log("Wire Amount: " + wireAmount);
-
+        
         
     }
 
@@ -482,6 +898,7 @@ bot.on("message", (message) => {
         
             
             message.reply("You entered the wrong value for roll. => [ Red (x2) | Black (x2) | Green x (14)]");
+            message.delete();
             return;
         }
         
@@ -564,7 +981,7 @@ bot.on("message", (message) => {
         cashBank[savedNamePos] = playerBank;
         
         if(rockBottom == true){
-            message.reply("You reached 0. You have no more money left. Wait until the bot is restarted, or we invent a new feature to gain credits back. :( . \nBank: " + playerBank + "<:gold_poker:364233886601052162>");
+            message.reply("You reached 0. You have no more money left. To add more money, type !moneymaker.");
         }
         
         
@@ -573,18 +990,31 @@ bot.on("message", (message) => {
         
     }
 
+    
+
     if(message.content.startsWith("!bank") == true){
 
         var playerName = message.author.username;  
         var savedNamePos = nameBank.indexOf(playerName);
         var playerBank = cashBank[savedNamePos];
 
-        if(savedNamePos !== -1){
-        message.channel.send("Bank for " + playerName + ".\n**<:gold_poker:364233886601052162>" + playerBank + "**");
-        } else {
-            message.channel.send(playerName + " is not registered as a player. Play the game by typing !play roulette");
+
+        if(savedNamePos == -1){
+            // Brand new, never saved
+            nameBank.push(playerName);
+            cashBank.push(1000);
+
+            var savedNamePos = nameBank.indexOf(playerName);
+            var playerBank = cashBank[savedNamePos];
+
+            message.channel.send(playerName + " was registered for Roulette.");
+    
         }
-    }
+        // Old player, get bank.
+        message.reply("\nBank for " + playerName + ".\n**<:gold_poker:364233886601052162>" + playerBank + "**");
+        message.delete();
+        }
+    
 
 
     if(message.content.startsWith("!leaderboard") == true || message.content.startsWith("!lead") == true){
