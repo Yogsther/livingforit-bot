@@ -19,15 +19,17 @@ var resetTimer;
 
 bot.on('ready', () => {
     bot.user.setUsername("Livingforit Bot");
-    bot.user.setGame("Livingforit.xyz/bot");
+    bot.user.setGame("!help | Livingforit.xyz/bot");
   })
 
 
 
 bot.on("message", (message) => {
 
-
-    if(message.author.bot) return;
+    if(message.author.bot == true){
+        return;
+    }
+    
 
 
     if(message.attachments.size > 0 && message.channel.name == bot_textID){
@@ -89,7 +91,7 @@ bot.on("message", (message) => {
                       icon_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Info_icon-72a7cf.svg/2000px-Info_icon-72a7cf.svg.png",
                     },
                     title: "Roulette commands",
-                    description: "```!roll [amount] [black (x2) | red (x2) | green (x14)]\n!bank - Gives you your bank status!\n!leaderboard - See top 3 wealthiest people on the server.\n!startpot - Start a new jackpot.\n!add [amount] - Bet in on a jackpot.\n!wire [username] [amount] - Send money to another person.\n!moneymaker - Add money to your account by clicking an emote```",                                                                   
+                    description: "```!roll [amount] [black (x2) | red (x2) | green (x14)]\n!bank - Gives you your bank status!\n!leaderboard - See top 3 wealthiest people on the server.\n!startpot - Start a new jackpot.\n!add [amount] - Bet in on a jackpot.\n!wire [username] [amount] - Send money to another person.\n!moneymaker - Add money to your account by clicking an emote!```",                                                                   
         
                     fields: [
                       {
@@ -201,9 +203,7 @@ bot.on("message", (message) => {
     }
     
 
-    if(message.author.bot == true){
-        return;
-    }
+    
 
     // Money Maker 3000^tm
     if(message.content == "!money" || message.content == "!moneymaker"){
@@ -549,7 +549,7 @@ bot.on("message", (message) => {
               
                 // Pick winner
 
-                poolWinner = poolPlayers[Math.floor(Math.random()*poolPlayers.length)];
+                poolWinner = poolPlayersChance[Math.floor(Math.random()*poolPlayersChance.length)];
 
                 // Give winner the pot
 
@@ -568,9 +568,7 @@ bot.on("message", (message) => {
                 var winnerPercentage = winnerBet / pot;
                 winnerPercentage = winnerPercentage * 100;
                 winnerPercentage = Math.round(winnerPercentage);
-                
 
-            
 
                 // ANIMATE LAYER 07 FINAL REVEAL
                 message.edit("",{embed: {
@@ -611,7 +609,8 @@ bot.on("message", (message) => {
 
 
     // Add money to pool
-    if(message.content.startsWith("!add") == true){
+
+    	if(message.content.startsWith("!add") == true){
         
         if(poolActive != true){
             message.reply("There are no current pots open. Open one by typing !pot");
@@ -737,7 +736,10 @@ bot.on("message", (message) => {
         var savedNamePos = nameBank.indexOf(playerName);
         var playerBank = cashBank[savedNamePos];
 
-
+        if(playerName == wirePlayer){
+            message.reply("You can't wire money to yourself.");
+            return;
+        }
        
 
         if(wireAmount < 1){
